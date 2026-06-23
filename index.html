@@ -112,58 +112,6 @@
             transform: scale(0.95);
         }
 
-        /* Stickers decorativos */
-        .sticker {
-            position: absolute;
-            opacity: 0.85;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-        }
-
-        .sticker-1 { 
-            top: 10px; 
-            left: 20px; 
-            width: 70px;
-            height: 85px;
-            animation: rotate 20s linear infinite;
-        }
-
-        .sticker-2 { 
-            top: 15px; 
-            right: 25px; 
-            width: 70px;
-            height: 70px;
-            animation: rotate 20s linear infinite;
-            animation-delay: 5s;
-        }
-
-        .sticker-3 { 
-            bottom: 30px; 
-            left: 30px; 
-            width: 60px;
-            height: 70px;
-            animation: rotate 20s linear infinite;
-            animation-delay: 10s;
-        }
-
-        .sticker-4 { 
-            bottom: 35px; 
-            right: 25px; 
-            width: 85px;
-            height: 85px;
-            animation: rotate 20s linear infinite;
-            animation-delay: 15s;
-        }
-
-        @keyframes rotate {
-            0% { transform: rotate(0deg) scale(1); }
-            25% { transform: rotate(5deg) scale(1.1); }
-            50% { transform: rotate(0deg) scale(1); }
-            75% { transform: rotate(-5deg) scale(1.1); }
-            100% { transform: rotate(0deg) scale(1); }
-        }
-
         /* Modal de respuesta */
         .modal {
             display: none;
@@ -293,14 +241,7 @@
     </style>
 </head>
 <body>
-    <!-- Stickers decorativos con tus imágenes -->
-    <div class="sticker sticker-1" style="background-image: url('https://i.imgur.com/sbhu390.png');"></div>
-    <div class="sticker sticker-2" style="background-image: url('https://i.imgur.com/OUPcJOY.png');"></div>
-    <div class="sticker sticker-3" style="background-image: url('https://i.imgur.com/1kktdMe.png');"></div>
-    <div class="sticker sticker-4" style="background-image: url('https://i.imgur.com/uc6DSfe.png');"></div>
-
     <div class="container">
-        <div class="emoji-decoration">💌</div>
         <h1>¿Quieres salir en una cita conmigo?</h1>
         
         <div class="buttons-container">
@@ -327,7 +268,7 @@
     <!-- Modal para respuesta NO -->
     <div class="modal" id="modalNo">
         <div class="modal-content">
-            <div class="sticker-grande" style="background-image: url('https://i.imgur.com/uc6DSfe.png');"></div>
+            <div class="sticker-grande" style="background-image: url('https://i.imgur.com/1kktdMe.png');"></div>
             <h2>¿POR QUE NO TILINA?</h2>
             <p class="mensaje-triste">Mira lo triste que estoy... 😭</p>
             <button class="close-btn" onclick="cerrarModal('modalNo')">Cerrar</button>
