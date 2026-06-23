@@ -60,17 +60,6 @@
             letter-spacing: 1px;
         }
 
-        .emoji-decoration {
-            font-size: 60px;
-            margin-bottom: 20px;
-            animation: float 3s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-        }
-
         .buttons-container {
             display: flex;
             gap: 20px;
@@ -157,13 +146,6 @@
             }
         }
 
-        .modal-content h2 {
-            font-size: 40px;
-            color: #ff6b9d;
-            margin-bottom: 20px;
-            font-weight: bold;
-        }
-
         .sticker-grande {
             width: 180px;
             height: 180px;
@@ -177,30 +159,6 @@
         @keyframes bounce {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-30px); }
-        }
-
-        /* Bailarines */
-        .dancer {
-            display: inline-block;
-            font-size: 80px;
-            margin: 0 15px;
-            animation: dance 0.6s ease-in-out infinite;
-        }
-
-        .dancer:nth-child(1) { animation-delay: 0s; }
-        .dancer:nth-child(2) { animation-delay: 0.2s; }
-        .dancer:nth-child(3) { animation-delay: 0.4s; }
-
-        @keyframes dance {
-            0%, 100% { transform: rotate(0deg) scale(1); }
-            25% { transform: rotate(-5deg) scale(1.1); }
-            50% { transform: rotate(5deg) scale(1); }
-            75% { transform: rotate(-5deg) scale(1.1); }
-        }
-
-        .dancers-container {
-            font-size: 0;
-            margin: 20px 0;
         }
 
         .close-btn {
@@ -232,12 +190,6 @@
                 transform: translateY(600px) rotateZ(720deg);
             }
         }
-
-        .mensaje-triste {
-            font-size: 24px;
-            color: #333;
-            margin: 20px 0;
-        }
     </style>
 </head>
 <body>
@@ -253,14 +205,7 @@
     <!-- Modal para respuesta SÍ -->
     <div class="modal" id="modalSi">
         <div class="modal-content">
-            <h2>¡YYYYEEEESSS! 🎉</h2>
             <div class="sticker-grande" style="background-image: url('https://i.imgur.com/OUPcJOY.png');"></div>
-            <div class="dancers-container">
-                <div class="dancer">🕺</div>
-                <div class="dancer">💃</div>
-                <div class="dancer">🕺</div>
-            </div>
-            <p style="font-size: 24px; color: #333; margin: 20px 0;">¡Será la mejor cita de nuestras vidas!</p>
             <button class="close-btn" onclick="cerrarModal('modalSi')">Cerrar</button>
         </div>
     </div>
@@ -269,8 +214,6 @@
     <div class="modal" id="modalNo">
         <div class="modal-content">
             <div class="sticker-grande" style="background-image: url('https://i.imgur.com/sbhu390.png');"></div>
-            <h2>¿POR QUE NO TILINA?</h2>
-            <p class="mensaje-triste">Mira lo triste que estoy... 😭</p>
             <button class="close-btn" onclick="cerrarModal('modalNo')">Cerrar</button>
         </div>
     </div>
