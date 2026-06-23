@@ -114,6 +114,7 @@
             justify-content: center;
             align-items: center;
             animation: fadeIn 0.3s ease;
+            overflow-y: auto;
         }
 
         .modal.active {
@@ -133,6 +134,7 @@
             max-width: 600px;
             animation: popIn 0.5s ease-out;
             position: relative;
+            margin: auto;
         }
 
         @keyframes popIn {
@@ -159,6 +161,45 @@
         @keyframes bounce {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-30px); }
+        }
+
+        /* Tabla de opciones */
+        .opciones-container {
+            margin: 30px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .opcion-btn {
+            background: linear-gradient(135deg, #feca57, #ff9ff3);
+            color: #333;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .opcion-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .mensaje-respuesta {
+            display: none;
+            font-size: 22px;
+            color: #ff6b9d;
+            font-weight: bold;
+            margin: 20px 0;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .mensaje-respuesta.visible {
+            display: block;
         }
 
         .close-btn {
@@ -190,6 +231,13 @@
                 transform: translateY(600px) rotateZ(720deg);
             }
         }
+
+        .titulo-no {
+            font-size: 36px;
+            color: #ff6b9d;
+            font-weight: bold;
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
@@ -206,6 +254,15 @@
     <div class="modal" id="modalSi">
         <div class="modal-content">
             <div class="sticker-grande" style="background-image: url('https://i.imgur.com/OUPcJOY.png');"></div>
+            
+            <div class="opciones-container" id="opcionesContainer">
+                <button class="opcion-btn" onclick="seleccionarOpcion(1)">Caminata por la playa + comida</button>
+                <button class="opcion-btn" onclick="seleccionarOpcion(2)">Pasear por el mall + comida</button>
+                <button class="opcion-btn" onclick="seleccionarOpcion(3)">Ambas opciones + más fotos juntos</button>
+            </div>
+
+            <div class="mensaje-respuesta" id="mensajeRespuesta">Perfecto, todo listo para nuestra cita la semana libre</div>
+
             <button class="close-btn" onclick="cerrarModal('modalSi')">Cerrar</button>
         </div>
     </div>
@@ -214,6 +271,7 @@
     <div class="modal" id="modalNo">
         <div class="modal-content">
             <div class="sticker-grande" style="background-image: url('https://i.imgur.com/sbhu390.png');"></div>
+            <div class="titulo-no">¿POR QUÉ NO TILINA?</div>
             <button class="close-btn" onclick="cerrarModal('modalNo')">Cerrar</button>
         </div>
     </div>
@@ -225,6 +283,20 @@
     <script>
         function respuestaSi() {
             document.getElementById('modalSi').classList.add('active');
+            document.getElementById('opcionesContainer').style.display = 'flex';
+            document.getElementById('mensajeRespuesta').classList.remove('visible');
+        }
+
+        function respuestaNo() {
+            document.getElementById('modalNo').classList.add('active');
+        }
+
+        function seleccionarOpcion(opcion) {
+            // Ocultar opciones
+            document.getElementById('opcionesContainer').style.display = 'none';
+            
+            // Mostrar mensaje de respuesta
+            document.getElementById('mensajeRespuesta').classList.add('visible');
             
             // Reproducir música alegre
             const audio = document.getElementById('audioAlegre');
@@ -232,10 +304,6 @@
             
             // Crear confeti
             crearConfeti();
-        }
-
-        function respuestaNo() {
-            document.getElementById('modalNo').classList.add('active');
         }
 
         function cerrarModal(modalId) {
