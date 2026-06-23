@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¿Quieres salir en una cita conmigo?</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #ff6b9d 0%, #feca57 25%, #ff9ff3 50%, #54a0ff 75%, #ff6b9d 100%);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            overflow: hidden;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 30px;
+            padding: 60px 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 500px;
+            position: relative;
+            animation: scaleIn 0.6s ease-out;
+            z-index: 10;
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        h1 {
+            font-size: 32px;
+            color: #ff6b9d;
+            margin-bottom: 30px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .emoji-decoration {
+            font-size: 60px;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .buttons-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 40px;
+        }
+
+        button {
+            padding: 15px 40px;
+            font-size: 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-si {
+            background: linear-gradient(135deg, #ff6b9d, #ff9ff3);
+            color: white;
+            box-shadow: 0 10px 25px rgba(255, 107, 157, 0.4);
+        }
+
+        .btn-si:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 35px rgba(255, 107, 157, 0.6);
+        }
+
+        .btn-no {
+            background: #e0e0e0;
+            color: #333;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-no:hover {
+            background: #d0d0d0;
+            transform: scale(0.95);
+        }
+
+        /* Stickers decorativos */
+        .sticker {
+            position: absolute;
+            opacity: 0.85;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .sticker-1 { 
+            top: 10px; 
+            left: 20px; 
+            width: 70px;
+            height: 85px;
+            animation: rotate 20s linear infinite;
+        }
+
+        .sticker-2 { 
+            top: 15px; 
+            right: 25px; 
+            width: 70px;
+            height: 70px;
+            animation: rotate 20s linear infinite;
+            animation-delay: 5s;
+        }
+
+        .sticker-3 { 
+            bottom: 30px; 
+            left: 30px; 
+            width: 60px;
+            height: 70px;
+            animation: rotate 20s linear infinite;
+            animation-delay: 10s;
+        }
+
+        .sticker-4 { 
+            bottom: 35px; 
+            right: 25px; 
+            width: 85px;
+            height: 85px;
+            animation: rotate 20s linear infinite;
+            animation-delay: 15s;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(5deg) scale(1.1); }
+            50% { transform: rotate(0deg) scale(1); }
+            75% { transform: rotate(-5deg) scale(1.1); }
+            100% { transform: rotate(0deg) scale(1); }
+        }
+
+        /* Modal de respuesta */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 20;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 30px;
+            padding: 60px 40px;
+            text-align: center;
+            max-width: 600px;
+            animation: popIn 0.5s ease-out;
+            position: relative;
+        }
+
+        @keyframes popIn {
+            from {
+                opacity: 0;
+                transform: scale(0.5) rotateX(90deg);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) rotateX(0deg);
+            }
+        }
+
+        .modal-content h2 {
+            font-size: 40px;
+            color: #ff6b9d;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .sticker-grande {
+            width: 180px;
+            height: 180px;
+            margin: 30px auto;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            animation: bounce 0.8s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-30px); }
+        }
+
+        /* Bailarines */
+        .dancer {
+            display: inline-block;
+            font-size: 80px;
+            margin: 0 15px;
+            animation: dance 0.6s ease-in-out infinite;
+        }
+
+        .dancer:nth-child(1) { animation-delay: 0s; }
+        .dancer:nth-child(2) { animation-delay: 0.2s; }
+        .dancer:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes dance {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(-5deg) scale(1.1); }
+            50% { transform: rotate(5deg) scale(1); }
+            75% { transform: rotate(-5deg) scale(1.1); }
+        }
+
+        .dancers-container {
+            font-size: 0;
+            margin: 20px 0;
+        }
+
+        .close-btn {
+            background: linear-gradient(135deg, #ff6b9d, #ff9ff3);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        .close-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            animation: confettiFall 3s ease-out forwards;
+        }
+
+        @keyframes confettiFall {
+            to {
+                opacity: 0;
+                transform: translateY(600px) rotateZ(720deg);
+            }
+        }
+
+        .mensaje-triste {
+            font-size: 24px;
+            color: #333;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Stickers decorativos con tus imágenes -->
+    <div class="sticker sticker-1" style="background-image: url('https://i.imgur.com/sbhu390.png');"></div>
+    <div class="sticker sticker-2" style="background-image: url('https://i.imgur.com/OUPcJOY.png');"></div>
+    <div class="sticker sticker-3" style="background-image: url('https://i.imgur.com/1kktdMe.png');"></div>
+    <div class="sticker sticker-4" style="background-image: url('https://i.imgur.com/uc6DSfe.png');"></div>
+
+    <div class="container">
+        <div class="emoji-decoration">💌</div>
+        <h1>¿Quieres salir en una cita conmigo?</h1>
+        
+        <div class="buttons-container">
+            <button class="btn-si" onclick="respuestaSi()">Sí</button>
+            <button class="btn-no" onclick="respuestaNo()">No</button>
+        </div>
+    </div>
+
+    <!-- Modal para respuesta SÍ -->
+    <div class="modal" id="modalSi">
+        <div class="modal-content">
+            <h2>¡YYYYEEEESSS! 🎉</h2>
+            <div class="sticker-grande" style="background-image: url('https://i.imgur.com/OUPcJOY.png');"></div>
+            <div class="dancers-container">
+                <div class="dancer">🕺</div>
+                <div class="dancer">💃</div>
+                <div class="dancer">🕺</div>
+            </div>
+            <p style="font-size: 24px; color: #333; margin: 20px 0;">¡Será la mejor cita de nuestras vidas!</p>
+            <button class="close-btn" onclick="cerrarModal('modalSi')">Cerrar</button>
+        </div>
+    </div>
+
+    <!-- Modal para respuesta NO -->
+    <div class="modal" id="modalNo">
+        <div class="modal-content">
+            <div class="sticker-grande" style="background-image: url('https://i.imgur.com/uc6DSfe.png');"></div>
+            <h2>¿POR QUE NO TILINA?</h2>
+            <p class="mensaje-triste">Mira lo triste que estoy... 😭</p>
+            <button class="close-btn" onclick="cerrarModal('modalNo')">Cerrar</button>
+        </div>
+    </div>
+
+    <audio id="audioAlegre" preload="auto">
+        <source src="https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        function respuestaSi() {
+            document.getElementById('modalSi').classList.add('active');
+            
+            // Reproducir música alegre
+            const audio = document.getElementById('audioAlegre');
+            audio.play().catch(e => console.log('No se pudo reproducir audio'));
+            
+            // Crear confeti
+            crearConfeti();
+        }
+
+        function respuestaNo() {
+            document.getElementById('modalNo').classList.add('active');
+        }
+
+        function cerrarModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+            const audio = document.getElementById('audioAlegre');
+            audio.pause();
+            audio.currentTime = 0;
+        }
+
+        function crearConfeti() {
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.top = '-10px';
+                confetti.style.background = ['#ff6b9d', '#feca57', '#ff9ff3', '#54a0ff'][Math.floor(Math.random() * 4)];
+                confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                document.body.appendChild(confetti);
+                
+                setTimeout(() => confetti.remove(), 3000);
+            }
+        }
+    </script>
+</body>
+</html>
