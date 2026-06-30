@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SportStats Pro – Análisis & Probabilidades</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #21262d;
+      --border: #30363d;
+      --accent: #00d4aa;
+      --accent2: #f0883e;
+      --accent3: #58a6ff;
+      --red: #f85149;
+      --green: #3fb950;
+      --yellow: #d29922;
+      --text: #e6edf3;
+      --text2: #8b949e;
+      --radius: 10px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ── TOP NAV ── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 20px;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .header-inner {
+      max-width: 1400px; margin: auto;
+      display: flex; align-items: center; gap: 20px;
+      height: 58px;
+    }
+    .logo { font-size: 20px; font-weight: 800; color: var(--accent); white-space: nowrap; }
+    .logo span { color: var(--text2); font-weight: 400; font-size: 13px; margin-left: 6px; }
+    nav { display: flex; gap: 4px; flex: 1; overflow-x: auto; }
+    nav::-webkit-scrollbar { display: none; }
+    .nav-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border: none; border-radius: 6px;
+      background: transparent; color: var(--text2);
+      cursor: pointer; font-size: 14px; font-weight: 500;
+      white-space: nowrap; transition: all .2s;
+    }
+    .nav-btn:hover { background: var(--surface2); color: var(--text); }
+    .nav-btn.active { background: var(--accent); color: #000; }
+    .nav-btn .icon { font-size: 16px; }
+    .live-badge {
+      background: var(--red); color: #fff; font-size: 10px; font-weight: 700;
+      padding: 2px 6px; border-radius: 20px; animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+
+    /* ── LAYOUT ── */
+    .app { max-width: 1400px; margin: 0 auto; padding: 20px; display: grid; grid-template-columns: 340px 1fr; gap: 20px; }
+    @media(max-width:900px){ .app{ grid-template-columns:1fr; } }
+
+    /* ── SIDEBAR ── */
+    .sidebar { display: flex; flex-direction: column; gap: 16px; }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden;
+    }
+    .card-header {
+      padding: 12px 16px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .card-header h3 { font-size: 14px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
+    .card-body { padding: 12px 16px; }
+
+    /* Match list */
+    .match-item {
+      padding: 12px; border-radius: 8px; cursor: pointer;
+      border: 1px solid transparent; transition: all .2s; margin-bottom: 8px;
+    }
+    .match-item:hover { background: var(--surface2); border-color: var(--border); }
+    .match-item.active { background: var(--surface2); border-color: var(--accent); }
+    .match-meta { font-size: 11px; color: var(--text2); margin-bottom: 8px; display: flex; justify-content: space-between; }
+    .match-teams { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .team-name { font-size: 14px; font-weight: 600; }
+    .match-score { font-size: 18px; font-weight: 700; color: var(--accent); text-align: center; min-width: 40px; }
+    .match-odds { display: flex; gap: 6px; margin-top: 10px; }
+    .odd-chip {
+      flex: 1; text-align: center; padding: 4px;
+      background: var(--bg); border-radius: 6px; font-size: 12px; border: 1px solid var(--border);
+    }
+    .odd-chip .label { color: var(--text2); font-size: 10px; }
+    .odd-chip .val { font-weight: 700; color: var(--accent2); }
+    .live-dot { width:8px;height:8px;background:var(--red);border-radius:50%;display:inline-block;animation:pulse 1.5s infinite; }
+
+    /* ── MAIN PANEL ── */
+    .main { display: flex; flex-direction: column; gap: 16px; }
+
+    /* Match header */
+    .match-hero {
+      background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 28px 24px; text-align: center; position: relative; overflow: hidden;
+    }
+    .match-hero::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(0,212,170,.08) 0%, transparent 60%);
+    }
+    .hero-league { font-size: 12px; color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+    .hero-teams { display: flex; justify-content: center; align-items: center; gap: 24px; }
+    .hero-team { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; }
+    .hero-team-logo { width: 64px; height: 64px; background: var(--surface2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; border: 2px solid var(--border); }
+    .hero-team-name { font-size: 18px; font-weight: 700; }
+    .hero-team-record { font-size: 12px; color: var(--text2); }
+    .hero-score-box { min-width: 120px; }
+    .hero-score { font-size: 48px; font-weight: 800; color: var(--accent); line-height: 1; }
+    .hero-time { font-size: 13px; color: var(--red); font-weight: 600; margin-top: 4px; }
+    .hero-status { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 4px; background: var(--surface); border-radius: 8px; padding: 4px; border: 1px solid var(--border); }
+    .tab-btn {
+      flex: 1; padding: 8px; border: none; border-radius: 6px;
+      background: transparent; color: var(--text2); cursor: pointer;
+      font-size: 13px; font-weight: 500; transition: all .2s;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { background: var(--accent); color: #000; font-weight: 700; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Probability bars */
+    .prob-section { display: flex; flex-direction: column; gap: 14px; }
+    .prob-row { }
+    .prob-header { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px; }
+    .prob-title { font-weight: 600; }
+    .prob-values { display: flex; gap: 8px; }
+    .prob-val { font-weight: 700; }
+    .prob-val.home { color: var(--accent3); }
+    .prob-val.draw { color: var(--text2); }
+    .prob-val.away { color: var(--accent2); }
+    .prob-bar-track { height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; display: flex; }
+    .prob-bar-home { background: var(--accent3); border-radius: 4px 0 0 4px; transition: width .8s ease; }
+    .prob-bar-draw { background: var(--text2); transition: width .8s ease; }
+    .prob-bar-away { background: var(--accent2); border-radius: 0 4px 4px 0; transition: width .8s ease; }
+
+    /* Stats grid */
+    .stats-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px 8px; align-items: center; }
+    .stat-home { text-align: right; font-weight: 600; font-size: 15px; }
+    .stat-away { text-align: left; font-weight: 600; font-size: 15px; }
+    .stat-label { text-align: center; font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
+    .stat-bar-row { grid-column: 1/-1; display: flex; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; gap: 1px; }
+    .stat-bar-h { background: var(--accent3); border-radius: 3px 0 0 3px; transition: width .8s; }
+    .stat-bar-a { background: var(--accent2); border-radius: 0 3px 3px 0; transition: width .8s; margin-left: auto; }
+
+    /* Prediction cards */
+    .pred-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); gap: 12px; }
+    .pred-card {
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+      padding: 14px; text-align: center; position: relative; overflow: hidden;
+    }
+    .pred-card.hot { border-color: var(--accent2); }
+    .pred-card.hot::before { content:'🔥 HOT'; position:absolute; top:6px; right:6px; font-size:10px; font-weight:700; color:var(--accent2); }
+    .pred-card.value { border-color: var(--green); }
+    .pred-card.value::before { content:'💎 VALUE'; position:absolute; top:6px; right:6px; font-size:10px; font-weight:700; color:var(--green); }
+    .pred-label { font-size: 11px; color: var(--text2); text-transform: uppercase; margin-bottom: 8px; letter-spacing: .5px; }
+    .pred-val { font-size: 26px; font-weight: 800; color: var(--accent); }
+    .pred-sub { font-size: 12px; color: var(--text2); margin-top: 4px; }
+    .pred-conf { margin-top: 10px; }
+    .conf-bar { height: 4px; background: var(--bg); border-radius: 2px; overflow: hidden; }
+    .conf-fill { height: 100%; border-radius: 2px; }
+    .conf-high { background: var(--green); }
+    .conf-med { background: var(--yellow); }
+    .conf-low { background: var(--red); }
+    .conf-label { font-size: 10px; color: var(--text2); margin-top: 3px; }
+
+    /* Strategies */
+    .strategy-list { display: flex; flex-direction: column; gap: 12px; }
+    .strategy-item {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 14px; display: flex; gap: 12px; align-items: flex-start;
+    }
+    .strategy-icon { font-size: 24px; min-width: 36px; }
+    .strategy-content { flex: 1; }
+    .strategy-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .strategy-desc { font-size: 13px; color: var(--text2); line-height: 1.5; }
+    .strategy-badge { display: inline-block; margin-top: 8px; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; }
+    .badge-high { background: rgba(63,185,80,.15); color: var(--green); }
+    .badge-med { background: rgba(210,153,34,.15); color: var(--yellow); }
+    .badge-low { background: rgba(248,81,73,.15); color: var(--red); }
+
+    /* Form table */
+    .form-dots { display: flex; gap: 4px; flex-wrap: wrap; }
+    .form-dot {
+      width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center;
+      justify-content: center; font-size: 12px; font-weight: 700;
+    }
+    .form-w { background: rgba(63,185,80,.2); color: var(--green); }
+    .form-d { background: rgba(139,148,158,.2); color: var(--text2); }
+    .form-l { background: rgba(248,81,73,.2); color: var(--red); }
+
+    /* Chart containers */
+    .chart-wrap { position: relative; height: 220px; }
+
+    /* Analyst section */
+    .analyst-card {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 16px; display: flex; gap: 14px;
+    }
+    .analyst-avatar { width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent3));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;color:#000;flex-shrink:0; }
+    .analyst-name { font-weight:700; font-size:14px; }
+    .analyst-role { font-size:11px;color:var(--text2);margin-bottom:8px; }
+    .analyst-pick { font-size:13px;line-height:1.6; }
+    .analyst-pick strong { color:var(--accent); }
+    .stars { color:var(--yellow); font-size:12px; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* Responsive */
+    @media(max-width:600px){
+      .hero-teams { gap: 12px; }
+      .hero-team-name { font-size: 14px; }
+      .hero-score { font-size: 36px; }
+      .pred-grid { grid-template-columns: repeat(2,1fr); }
+    }
+
+    .section-title { font-size: 16px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .section-title::after { content:''; flex:1;height:1px;background:var(--border); }
+
+    .badge { display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600; }
+    .badge-live { background:rgba(248,81,73,.15);color:var(--red); }
+    .badge-upcoming { background:rgba(88,166,255,.15);color:var(--accent3); }
+    .badge-finished { background:rgba(139,148,158,.15);color:var(--text2); }
+
+    .filter-bar { display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px; }
+    .filter-btn { padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-size:12px;transition:all .2s; }
+    .filter-btn:hover,.filter-btn.active { background:var(--surface2);color:var(--text);border-color:var(--accent); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">⚡ SportStats<span>Pro</span></div>
+    <nav id="sportNav">
+      <button class="nav-btn active" onclick="switchSport('futbol',this)" data-sport="futbol">
+        <span class="icon">⚽</span> Fútbol
+      </button>
+      <button class="nav-btn" onclick="switchSport('baloncesto',this)" data-sport="baloncesto">
+        <span class="icon">🏀</span> Baloncesto
+      </button>
+      <button class="nav-btn" onclick="switchSport('tenis',this)" data-sport="tenis">
+        <span class="icon">🎾</span> Tenis
+      </button>
+      <button class="nav-btn" onclick="switchSport('beisbol',this)" data-sport="beisbol">
+        <span class="icon">⚾</span> Béisbol
+      </button>
+      <button class="nav-btn" onclick="switchSport('mma',this)" data-sport="mma">
+        <span class="icon">🥊</span> MMA / UFC
+      </button>
+      <button class="nav-btn" onclick="switchSport('rugby',this)" data-sport="rugby">
+        <span class="icon">🏉</span> Rugby
+      </button>
+    </nav>
+  </div>
+</header>
+
+<div class="app">
+  <!-- ── SIDEBAR ── -->
+  <div class="sidebar">
+    <div class="card">
+      <div class="card-header">
+        <h3 id="matchListTitle">Partidos – Fútbol</h3>
+        <span id="liveCount" class="live-badge">3 EN VIVO</span>
+      </div>
+      <div class="card-body" style="padding:8px" id="matchList">
+        <!-- rendered by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MAIN ── -->
+  <div class="main">
+    <!-- Match hero -->
+    <div class="match-hero" id="matchHero"><!-- rendered by JS --></div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('probabilidades',this)">📊 Probabilidades</button>
+      <button class="tab-btn" onclick="switchTab('estadisticas',this)">📈 Estadísticas</button>
+      <button class="tab-btn" onclick="switchTab('predicciones',this)">🎯 Predicciones</button>
+      <button class="tab-btn" onclick="switchTab('analistas',this)">🧠 Analistas</button>
+      <button class="tab-btn" onclick="switchTab('estrategias',this)">♟️ Estrategias</button>
+    </div>
+
+    <!-- Tab: Probabilidades -->
+    <div class="tab-content active card" id="tab-probabilidades">
+      <div class="card-body">
+        <p class="section-title">Resultado del Partido</p>
+        <div class="prob-section" id="probSection"><!-- JS --></div>
+        <br/>
+        <p class="section-title">Gráfico de Probabilidades</p>
+        <div class="chart-wrap"><canvas id="probChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Tab: Estadísticas -->
+    <div class="tab-content card" id="tab-estadisticas">
+      <div class="card-body">
+        <div class="filter-bar" id="statFilter"><!-- JS --></div>
+        <div class="stats-grid" id="statsGrid"><!-- JS --></div>
+        <br/>
+        <p class="section-title">Forma Reciente (últimos 5)</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" id="formSection"><!-- JS --></div>
+      </div>
+    </div>
+
+    <!-- Tab: Predicciones -->
+    <div class="tab-content card" id="tab-predicciones">
+      <div class="card-body">
+        <p class="section-title">Predicciones Específicas</p>
+        <div class="pred-grid" id="predGrid"><!-- JS --></div>
+        <br/>
+        <p class="section-title">Distribución Histórica de Goles</p>
+        <div class="chart-wrap"><canvas id="goalsChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Tab: Analistas -->
+    <div class="tab-content card" id="tab-analistas">
+      <div class="card-body" id="analystSection"><!-- JS --></div>
+    </div>
+
+    <!-- Tab: Estrategias -->
+    <div class="tab-content card" id="tab-estrategias">
+      <div class="card-body" id="strategySection"><!-- JS --></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════
+//  DATA
+// ══════════════════════════════
+const SPORTS_DATA = {
+  futbol: {
+    label: 'Fútbol', liveCount: '3 EN VIVO',
+    matches: [
+      {
+        id:1, status:'live', minute:'67\'', league:'LaLiga EA Sports', home:'Real Madrid', away:'FC Barcelona',
+        homeEmoji:'⚪', awayEmoji:'🔵', score:'2-1', homeRecord:'22V 5E 3D', awayRecord:'20V 6E 4D',
+        odds:{ home:2.10, draw:3.40, away:3.50 },
+        probs:{ home:52, draw:23, away:25 },
+        stats:[
+          { label:'Posesión %', home:58, away:42, type:'percent' },
+          { label:'Tiros Totales', home:14, away:9, type:'num' },
+          { label:'Tiros a Puerta', home:6, away:3, type:'num' },
+          { label:'Córners', home:7, away:4, type:'num' },
+          { label:'Faltas', home:12, away:15, type:'num' },
+          { label:'Tarjetas Amarillas', home:2, away:3, type:'num' },
+          { label:'Tarjetas Rojas', home:0, away:0, type:'num' },
+          { label:'Fueras de Juego', home:4, away:2, type:'num' },
+          { label:'Pases', home:478, away:341, type:'num' },
+          { label:'Precisión Pases %', home:89, away:82, type:'percent' },
+          { label:'Duelos Ganados %', home:54, away:46, type:'percent' },
+          { label:'Distancia Recorrida km', home:62, away:59, type:'num' },
+        ],
+        form:{ home:['W','W','D','W','L'], away:['W','W','W','D','W'] },
+        preds:[
+          { label:'Más de 2.5 Goles', val:'67%', conf:67, hot:true },
+          { label:'Ambos Anotan', val:'74%', conf:74, hot:true },
+          { label:'Córners >9.5', val:'71%', conf:71, value:true },
+          { label:'1er gol <30min', val:'58%', conf:58 },
+          { label:'Tarjeta Amarilla HT', val:'82%', conf:82, hot:true },
+          { label:'Penal en el partido', val:'28%', conf:28 },
+          { label:'Más de 3.5 Goles', val:'41%', conf:41 },
+          { label:'Resultado exacto 2-1', val:'12%', conf:12 },
+          { label:'Gana en 90min', val:'52%', conf:52, value:true },
+          { label:'Doble oportunidad 1X', val:'75%', conf:75 },
+        ],
+        analysts:[
+          { name:'Carlos Rueda', role:'Analista UEFA · ⭐⭐⭐⭐⭐', avatar:'CR', pick:'El Real Madrid llega con una racha de <strong>8 partidos sin perder en casa</strong>. Históricamente el Clásico produce más de 3 goles en el 60% de ocasiones. <strong>Apuesta sugerida: Ambos equipos anotan + Más de 2.5 goles @ 1.95</strong>', rating:5 },
+          { name:'Sofía Martínez', role:'Especialista en Córners · ⭐⭐⭐⭐', avatar:'SM', pick:'El Madrid promedia <strong>8.3 córners por partido</strong> en casa. Barça defensivamente cede muchos córners en la segunda parte. <strong>Córners >9.5 tiene valor real a cuota 2.10</strong>', rating:4 },
+          { name:'Diego Álvarez', role:'Modelo Estadístico xG · ⭐⭐⭐⭐⭐', avatar:'DA', pick:'xG acumulado del Real Madrid en casa: <strong>2.18 por partido</strong>. Barça xGA: 1.24. El modelo proyecta <strong>2.4 – 1.6 goles esperados</strong>. El handicap asiático -0.5 local tiene valor.', rating:5 },
+        ],
+        strategies:[
+          { icon:'🎯', title:'Estrategia Over Goals', desc:'En los últimos 12 clásicos, 8 terminaron con más de 2.5 goles. La motivación alta de ambos equipos y el estado de forma ofensiva actual respaldan esta tendencia. Configurar un sistema con Over 1.5 (HT) como base.', badge:'alta' },
+          { icon:'📐', title:'Handicap Asiático', desc:'Real Madrid -0.5 en hándicap asiático reduce la varianza del empate. El equipo local suma 78% de puntos en casa esta temporada. Combinado con la presión del visitante, el hándicap asiático -0.5 a 1.88 tiene valor esperado positivo (+EV).', badge:'alta' },
+          { icon:'🔺', title:'Total Córners Over 9.5', desc:'Combinando los promedios: Madrid 8.3 + Barça 5.1 = 13.4 por partido. La media ponderada en Clásicos es 11.2. Sobre 9.5 tiene tasa de acierto del 71% históricamente. Cuota 2.10 está por encima del valor justo.', badge:'alta' },
+          { icon:'💛', title:'Total Tarjetas +4.5', desc:'El árbitro designado promedia 5.2 tarjetas por partido. La rivalidad histórica eleva las faltas al 118% de la media. Tarjetas +4.5 a 1.75 tiene +EV significativo.', badge:'media' },
+        ],
+        goalsHist:[2,5,8,11,14,11,8,5,3,1],
+      },
+      {
+        id:2, status:'live', minute:'34\'', league:'Premier League', home:'Manchester City', away:'Arsenal',
+        homeEmoji:'🔵', awayEmoji:'🔴', score:'1-0', homeRecord:'24V 4E 2D', awayRecord:'22V 5E 3D',
+        odds:{ home:1.80, draw:3.80, away:4.20 },
+        probs:{ home:58, draw:20, away:22 },
+        stats:[
+          { label:'Posesión %', home:63, away:37, type:'percent' },
+          { label:'Tiros Totales', home:11, away:5, type:'num' },
+          { label:'Tiros a Puerta', home:5, away:2, type:'num' },
+          { label:'Córners', home:5, away:2, type:'num' },
+          { label:'Faltas', home:8, away:11, type:'num' },
+          { label:'Tarjetas Amarillas', home:1, away:2, type:'num' },
+          { label:'Tarjetas Rojas', home:0, away:0, type:'num' },
+          { label:'xG', home:1.62, away:0.48, type:'num' },
+        ],
+        form:{ home:['W','W','W','W','D'], away:['W','W','D','W','W'] },
+        preds:[
+          { label:'Más de 2.5 Goles', val:'55%', conf:55 },
+          { label:'Ambos Anotan', val:'60%', conf:60, value:true },
+          { label:'Córners >8.5', val:'65%', conf:65, hot:true },
+          { label:'Man City marca 2+', val:'62%', conf:62 },
+          { label:'Tarjeta en 1ª parte', val:'71%', conf:71 },
+          { label:'Menos de 1.5 Goles 1T', val:'52%', conf:52 },
+        ],
+        analysts:[
+          { name:'James Porter', role:'Premier League Analyst · ⭐⭐⭐⭐⭐', avatar:'JP', pick:'Man City at home is <strong>near-unbeatable this season</strong> with xG of 2.1 per game. Arsenal's high line is vulnerable to City\'s through balls. <strong>City -1 Asian Handicap @ 2.20 is strong value.</strong>', rating:5 },
+        ],
+        strategies:[
+          { icon:'🏹', title:'Bajo 1.5 Goles 1ª Parte', desc:'City suele dominar con posesión sin apresurarse en el primer tiempo. El 58% de sus partidos en casa terminan 0-0 al descanso. Bajo 1.5 goles primera parte a 1.55 es opción segura.', badge:'alta' },
+          { icon:'📊', title:'Total Tiros City 12+', desc:'City promedia 14.6 tiros por partido en casa. Arsenal cede espacio. Línea de tiros City sobre 12.5 @ 1.80 con alta probabilidad.', badge:'media' },
+        ],
+        goalsHist:[1,4,9,13,16,13,9,6,2,1],
+      },
+      {
+        id:3, status:'upcoming', minute:'20:45', league:'Serie A', home:'Inter Milan', away:'Juventus',
+        homeEmoji:'⚫', awayEmoji:'⚪', score:'vs', homeRecord:'21V 7E 2D', awayRecord:'19V 6E 5D',
+        odds:{ home:2.05, draw:3.30, away:3.60 },
+        probs:{ home:48, draw:27, away:25 },
+        stats:[
+          { label:'Posesión % (Season)', home:55, away:52, type:'percent' },
+          { label:'Goles a Favor', home:62, away:51, type:'num' },
+          { label:'Goles en Contra', home:22, away:30, type:'num' },
+          { label:'Córners por partido', home:6.4, away:5.8, type:'num' },
+          { label:'xG por partido', home:1.94, away:1.68, type:'num' },
+          { label:'Clean Sheets', home:12, away:8, type:'num' },
+        ],
+        form:{ home:['W','D','W','W','D'], away:['W','L','W','D','W'] },
+        preds:[
+          { label:'Menos de 2.5 Goles', val:'62%', conf:62, value:true },
+          { label:'Ambos Anotan', val:'55%', conf:55 },
+          { label:'1X Doble Oportunidad', val:'75%', conf:75, hot:true },
+          { label:'Córners >10.5', val:'61%', conf:61 },
+          { label:'0-0 Medio Tiempo', val:'38%', conf:38 },
+        ],
+        analysts:[
+          { name:'Marco Ferretti', role:'Serie A Scout · ⭐⭐⭐⭐', avatar:'MF', pick:'Il Derby d\'Italia storico estadísticamente es bajo en goles: media <strong>1.82 por partido en los últimos 10</strong>. El Inter en casa es sólido defensivamente (0.73 goles concedidos). <strong>Handicap Inter -0.25 @ 1.94 con valor.</strong>', rating:4 },
+        ],
+        strategies:[
+          { icon:'🔒', title:'Estrategia Defensiva', desc:'Ambos equipos priorizan no perder en duelos directos por el título. Los últimos 4 Derby d\'Italia terminaron con menos de 2 goles. Bajo 2.5 a 1.75 tiene valor positivo esperado.', badge:'alta' },
+        ],
+        goalsHist:[3,8,12,16,18,13,9,5,2,1],
+      },
+      {
+        id:4, status:'finished', minute:'FT', league:'Bundesliga', home:'Bayern Munich', away:'Borussia Dortmund',
+        homeEmoji:'🔴', awayEmoji:'🟡', score:'3-2', homeRecord:'25V 3E 2D', awayRecord:'18V 6E 6D',
+        odds:{ home:1.55, draw:4.20, away:5.50 },
+        probs:{ home:68, draw:17, away:15 },
+        stats:[
+          { label:'Posesión %', home:61, away:39, type:'percent' },
+          { label:'Tiros Totales', home:18, away:11, type:'num' },
+          { label:'Tiros a Puerta', home:9, away:5, type:'num' },
+          { label:'Córners', home:9, away:5, type:'num' },
+          { label:'Faltas', home:11, away:14, type:'num' },
+          { label:'Tarjetas Amarillas', home:1, away:2, type:'num' },
+        ],
+        form:{ home:['W','W','W','D','W'], away:['L','W','D','W','L'] },
+        preds:[
+          { label:'Más de 2.5 Goles', val:'78%', conf:78, hot:true },
+          { label:'Bayern marca 2+', val:'72%', conf:72 },
+          { label:'Ambos Anotan', val:'70%', conf:70 },
+        ],
+        analysts:[
+          { name:'Klaus Weber', role:'Bundesliga Expert · ⭐⭐⭐⭐⭐', avatar:'KW', pick:'Der Klassiker siempre produce goles. Bayern promedia <strong>3.1 goles en casa</strong> esta temporada. <strong>Result: 3-2 Bayern ✅</strong> — predicción acertada.', rating:5 },
+        ],
+        strategies:[
+          { icon:'⚽', title:'Over Goals + Both Score', desc:'El Klassiker históricamente suma media de 4.1 goles. Combinación Over 2.5 + Ambos anotan @ 1.90 es la estrategia con mayor ROI histórico en este duelo.', badge:'alta' },
+        ],
+        goalsHist:[1,3,7,12,17,20,15,10,5,2],
+      },
+    ]
+  },
+  baloncesto: {
+    label: 'Baloncesto', liveCount: '2 EN VIVO',
+    matches: [
+      {
+        id:10, status:'live', minute:'Q3 8:22', league:'NBA', home:'Boston Celtics', away:'Golden State Warriors',
+        homeEmoji:'🍀', awayEmoji:'💛', score:'78-71', homeRecord:'48V 14D', awayRecord:'42V 20D',
+        odds:{ home:1.75, draw:null, away:2.10 },
+        probs:{ home:62, draw:0, away:38 },
+        stats:[
+          { label:'Puntos', home:78, away:71, type:'num' },
+          { label:'Rebotes', home:34, away:29, type:'num' },
+          { label:'Asistencias', home:18, away:16, type:'num' },
+          { label:'Triples Anotados', home:11, away:9, type:'num' },
+          { label:'% Tiro Campo', home:48, away:45, type:'percent' },
+          { label:'% Triples', home:42, away:38, type:'percent' },
+          { label:'Pérdidas', home:8, away:11, type:'num' },
+          { label:'Robos', home:7, away:5, type:'num' },
+        ],
+        form:{ home:['W','W','L','W','W'], away:['W','W','W','L','W'] },
+        preds:[
+          { label:'Total >220.5', val:'68%', conf:68, hot:true },
+          { label:'Boston Gana', val:'62%', conf:62 },
+          { label:'Triples >22.5', val:'72%', conf:72, value:true },
+          { label:'Margin >5.5', val:'55%', conf:55 },
+          { label:'OT del partido', val:'15%', conf:15 },
+          { label:'Tatum >28.5 pts', val:'58%', conf:58, hot:true },
+        ],
+        analysts:[
+          { name:'Mike Johnson', role:'NBA Analyst ESPN · ⭐⭐⭐⭐⭐', avatar:'MJ', pick:'Celtics have home court advantage and best defense in the league. <strong>Total over 220.5 @ 1.90</strong> — both teams run high-tempo offenses. Tatum on a 30+ pts streak in home playoffs games.', rating:5 },
+        ],
+        strategies:[
+          { icon:'🏀', title:'Total Points Over', desc:'Ambos equipos top-5 en ritmo ofensivo NBA. Celtics promedia 121 PPG en casa, Warriors 118 PPG en visita. Total Over 220.5 tiene 68% de probabilidad histórica en matchups similares.', badge:'alta' },
+          { icon:'🎯', title:'Triples Combinados', desc:'Curry + Thompson + Celtics 3pt specialists = promedio 26.4 triples combinados. Línea 22.5 está baja. Over Triples @ 1.85 con alto valor.', badge:'alta' },
+        ],
+        goalsHist:[5,10,18,22,20,16,12,8,4,2],
+      },
+    ]
+  },
+  tenis: {
+    label: 'Tenis', liveCount: '1 EN VIVO',
+    matches: [
+      {
+        id:20, status:'live', minute:'Set 2 4-3', league:'Wimbledon – QF', home:'Carlos Alcaraz', away:'Novak Djokovic',
+        homeEmoji:'🇪🇸', awayEmoji:'🇷🇸', score:'1-1 Sets', homeRecord:'Tour W-L 48-8', awayRecord:'Tour W-L 44-10',
+        odds:{ home:1.90, draw:null, away:1.95 },
+        probs:{ home:51, draw:0, away:49 },
+        stats:[
+          { label:'Aces', home:8, away:12, type:'num' },
+          { label:'Dobles Faltas', home:3, away:2, type:'num' },
+          { label:'1er Saque %', home:68, away:72, type:'percent' },
+          { label:'Puntos Ganados 1S', home:78, away:80, type:'percent' },
+          { label:'Break Points Ganados', home:3, away:2, type:'num' },
+          { label:'Winners', home:28, away:31, type:'num' },
+          { label:'Errores No Forzados', home:18, away:15, type:'num' },
+        ],
+        form:{ home:['W','W','W','W','L'], away:['W','W','W','W','W'] },
+        preds:[
+          { label:'5 Sets', val:'44%', conf:44, hot:true },
+          { label:'Alcaraz Gana', val:'51%', conf:51, value:true },
+          { label:'Sets >3.5', val:'58%', conf:58 },
+          { label:'Djokovic Gana Set 3', val:'52%', conf:52 },
+          { label:'Total Games >38.5', val:'62%', conf:62, hot:true },
+        ],
+        analysts:[
+          { name:'Rafael Nadal Jr.', role:'Tennis Coach & Analyst · ⭐⭐⭐⭐⭐', avatar:'RN', pick:'Este es el duelo de generaciones. Alcaraz en hierba de Wimbledon es <strong>devastador con su saque-volea</strong>. Sin embargo, Djokovic no ha perdido un partido en Wimbledon en 4 años. <strong>Total Games Over 38.5 @ 1.85 tiene alto valor.</strong>', rating:5 },
+        ],
+        strategies:[
+          { icon:'🎾', title:'Total Games Over', desc:'Ambos jugadores están en su mejor nivel. Históricamente los QF de Wimbledon entre top-3 producen 41.2 games en promedio. Over 38.5 @ 1.85 es valor claro.', badge:'alta' },
+          { icon:'🔄', title:'5 Sets a Precio', desc:'Dado el equilibrio estadístico (51/49), la posibilidad de 5 sets a 2.20 tiene valor positivo esperado. Los últimos 3 enfrentamientos directos fueron a 5 sets.', badge:'media' },
+        ],
+        goalsHist:[2,5,9,14,18,17,14,10,6,3],
+      },
+    ]
+  },
+  beisbol: {
+    label: 'Béisbol', liveCount: '0 EN VIVO',
+    matches: [
+      {
+        id:30, status:'upcoming', minute:'19:05', league:'MLB', home:'New York Yankees', away:'Los Angeles Dodgers',
+        homeEmoji:'🔵', awayEmoji:'⚡', score:'vs', homeRecord:'62V 28D', awayRecord:'68V 22D',
+        odds:{ home:2.05, draw:null, away:1.85 },
+        probs:{ home:44, draw:0, away:56 },
+        stats:[
+          { label:'AVG Equipo', home:.265, away:.278, type:'num' },
+          { label:'Carreras/Juego', home:5.2, away:5.8, type:'num' },
+          { label:'ERA Pitcheo', home:3.45, away:3.12, type:'num' },
+          { label:'Home Runs', home:142, away:158, type:'num' },
+          { label:'WHIP Abridor', home:1.22, away:1.08, type:'num' },
+        ],
+        form:{ home:['W','W','L','W','L'], away:['W','W','W','W','L'] },
+        preds:[
+          { label:'Total Runs >8.5', val:'61%', conf:61, hot:true },
+          { label:'Dodgers Ganan', val:'56%', conf:56, value:true },
+          { label:'NRFI (0-0 1er inn.)', val:'58%', conf:58 },
+          { label:'Home Run en partido', val:'74%', conf:74, hot:true },
+          { label:'1er lanzador 6+ inn.', val:'52%', conf:52 },
+        ],
+        analysts:[
+          { name:'Tony Rivera', role:'MLB Scout · ⭐⭐⭐⭐', avatar:'TR', pick:'Los Dodgers entran con el mejor pitcheo del mes de julio (ERA 2.89). Los abridores en este matchup favorecen al equipo visitante históricamente. <strong>Dodgers ML @ 1.85 + Total Over 8.5 @ 1.90 como combinada.</strong>', rating:4 },
+        ],
+        strategies:[
+          { icon:'⚾', title:'Total Runs Over', desc:'El Yankee Stadium produce 18% más carreras que el promedio MLB por su dimensión reducida. Con los dos bullpens fatigados, Over 8.5 @ 1.90 tiene valor positivo.', badge:'alta' },
+          { icon:'💥', title:'Home Run Anytime', desc:'Ambos equipos top-5 en HRs. En duelos interligas en Yankee Stadium, HRs aparecen en el 74% de los juegos. Precio justo en 1.40 vs mercado 1.50.', badge:'media' },
+        ],
+        goalsHist:[3,7,12,17,20,18,12,7,3,1],
+      },
+    ]
+  },
+  mma: {
+    label: 'MMA / UFC', liveCount: '0 EN VIVO',
+    matches: [
+      {
+        id:40, status:'upcoming', minute:'Sábado 22:00', league:'UFC 310 – Estelar', home:'Jon Jones', away:'Stipe Miocic',
+        homeEmoji:'🦅', awayEmoji:'🦶', score:'vs', homeRecord:'27V 1D 0E', awayRecord:'20V 4D 0E',
+        odds:{ home:1.45, draw:null, away:2.80 },
+        probs:{ home:72, draw:0, away:28 },
+        stats:[
+          { label:'Victorias por KO/TKO', home:10, away:12, type:'num' },
+          { label:'Victorias por Sumisión', home:6, away:2, type:'num' },
+          { label:'Victorias por Decisión', home:11, away:6, type:'num' },
+          { label:'Golpes Conectados/min', home:4.32, away:5.10, type:'num' },
+          { label:'Precisión de Golpes %', home:58, away:54, type:'percent' },
+          { label:'Intentos de Derribo/15min', home:2.8, away:1.2, type:'num' },
+          { label:'Defensa Derribo %', home:95, away:72, type:'percent' },
+        ],
+        form:{ home:['W','W','W','W','W'], away:['W','W','L','W','W'] },
+        preds:[
+          { label:'Jon Jones Gana', val:'72%', conf:72, hot:true },
+          { label:'Va a Decisión', val:'54%', conf:54, value:true },
+          { label:'KO/TKO en pelea', val:'38%', conf:38 },
+          { label:'Jones gana R1-2', val:'28%', conf:28 },
+          { label:'Stipe gana por KO', val:'22%', conf:22 },
+          { label:'Jones gana sub.', val:'18%', conf:18 },
+        ],
+        analysts:[
+          { name:'Daniel Cormier', role:'Ex Campeón UFC · ⭐⭐⭐⭐⭐', avatar:'DC', pick:'Jon Jones es el mejor de todos los tiempos con ventaja técnica y de wrestling. <strong>Sin embargo, Stipe tiene el mejor chin en división pesada.</strong> Mi pick: <strong>Jones por Decisión @ 2.50 tiene enorme valor</strong> vs KO que está sobrevalorado.', rating:5 },
+        ],
+        strategies:[
+          { icon:'🥊', title:'Jones por Decisión', desc:'Jones demuestra control total en el wrestling y el clínch. Con Stipe grande y difícil de nocaut, Jones buscará decisión unánime. Precio 2.50 vs probabilidad implícita de 40% = +EV positivo.', badge:'alta' },
+          { icon:'📊', title:'Round Betting', desc:'Jones es peligroso en R1 con su ofensiva early. Stipe sobrevive y presiona en R3+. Round 3+ Jones @ 3.20 tiene valor si creces que va largo.', badge:'media' },
+        ],
+        goalsHist:[15,20,18,15,10,8,6,4,2,1],
+      },
+    ]
+  },
+  rugby: {
+    label: 'Rugby', liveCount: '1 EN VIVO',
+    matches: [
+      {
+        id:50, status:'live', minute:'65\'', league:'Six Nations', home:'England', away:'France',
+        homeEmoji:'🏴󠁧󠁢󠁥󠁮󠁧󠁿', awayEmoji:'🇫🇷', score:'17-14', homeRecord:'3V 1D', awayRecord:'4V 0D',
+        odds:{ home:2.40, draw:14.0, away:1.62 },
+        probs:{ home:40, draw:5, away:55 },
+        stats:[
+          { label:'Tries', home:2, away:2, type:'num' },
+          { label:'Posesión %', home:42, away:58, type:'percent' },
+          { label:'Territorio %', home:38, away:62, type:'percent' },
+          { label:'Tackles Completados', home:89, away:102, type:'num' },
+          { label:'Mauls Ganados', home:4, away:7, type:'num' },
+          { label:'Penalty Kicks', home:2, away:0, type:'num' },
+          { label:'Metros Ganados', home:312, away:428, type:'num' },
+        ],
+        form:{ home:['W','W','L','W','D'], away:['W','W','W','W','W'] },
+        preds:[
+          { label:'France Gana', val:'55%', conf:55, hot:true },
+          { label:'Total Tries >5.5', val:'62%', conf:62, value:true },
+          { label:'Over 44.5 Puntos', val:'58%', conf:58 },
+          { label:'England en el marcador', val:'82%', conf:82 },
+          { label:'French margin 1-12', val:'42%', conf:42 },
+        ],
+        analysts:[
+          { name:'Jonny Wilkinson', role:'World Cup Legend · ⭐⭐⭐⭐⭐', avatar:'JW', pick:'France dominate territory and possession — the real indicators in rugby. England\'s set-piece will be tested. <strong>France to win + Over 44.5 pts @ 2.10 combination has strong +EV.</strong>', rating:5 },
+        ],
+        strategies:[
+          { icon:'🏉', title:'Francia + Total Points', desc:'Francia con 58% posesión generará oportunidades continuas. El partido está abierto y con alta intensidad. Combinada Francia ML + Over 44.5 @ 2.10 tiene valor histórico en Six Nations head-to-head.', badge:'alta' },
+        ],
+        goalsHist:[2,5,9,14,18,19,15,10,5,2],
+      },
+    ]
+  },
+};
+
+// ══════════════════════════════
+//  STATE
+// ══════════════════════════════
+let currentSport = 'futbol';
+let currentMatchId = 1;
+let probChartInstance = null;
+let goalsChartInstance = null;
+
+// ══════════════════════════════
+//  INIT
+// ══════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  renderSport('futbol');
+});
+
+function switchSport(sport, btn) {
+  currentSport = sport;
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const data = SPORTS_DATA[sport];
+  currentMatchId = data.matches[0].id;
+  renderSport(sport);
+}
+
+function renderSport(sport) {
+  const data = SPORTS_DATA[sport];
+  document.getElementById('matchListTitle').textContent = `Partidos – ${data.label}`;
+  document.getElementById('liveCount').textContent = data.liveCount;
+  renderMatchList(data.matches);
+  renderMatch(currentMatchId);
+}
+
+// ══════════════════════════════
+//  MATCH LIST
+// ══════════════════════════════
+function renderMatchList(matches) {
+  const container = document.getElementById('matchList');
+  container.innerHTML = matches.map(m => `
+    <div class="match-item ${m.id === currentMatchId ? 'active':''}" id="mi-${m.id}" onclick="selectMatch(${m.id})">
+      <div class="match-meta">
+        <span>${m.league}</span>
+        <span>
+          ${m.status==='live' ? `<span class="live-dot"></span> ${m.minute}` :
+            m.status==='upcoming' ? `<span class="badge badge-upcoming">▸ ${m.minute}</span>` :
+            `<span class="badge badge-finished">FT</span>`}
+        </span>
+      </div>
+      <div class="match-teams">
+        <div class="team-name">${m.homeEmoji} ${m.home}</div>
+        <div class="match-score">${m.score}</div>
+        <div class="team-name" style="text-align:right">${m.away} ${m.awayEmoji}</div>
+      </div>
+      <div class="match-odds">
+        <div class="odd-chip"><div class="label">1</div><div class="val">${m.odds.home}</div></div>
+        ${m.odds.draw ? `<div class="odd-chip"><div class="label">X</div><div class="val">${m.odds.draw}</div></div>` : ''}
+        <div class="odd-chip"><div class="label">2</div><div class="val">${m.odds.away}</div></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function selectMatch(id) {
+  currentMatchId = id;
+  document.querySelectorAll('.match-item').forEach(el => el.classList.remove('active'));
+  const el = document.getElementById(`mi-${id}`);
+  if(el) el.classList.add('active');
+  renderMatch(id);
+}
+
+// ══════════════════════════════
+//  MATCH DETAIL
+// ══════════════════════════════
+function getMatch(id) {
+  for(const sport of Object.values(SPORTS_DATA)){
+    const m = sport.matches.find(x=>x.id===id);
+    if(m) return m;
+  }
+  return null;
+}
+
+function renderMatch(id) {
+  const m = getMatch(id);
+  if(!m) return;
+  renderHero(m);
+  renderProbabilities(m);
+  renderStats(m);
+  renderPredictions(m);
+  renderAnalysts(m);
+  renderStrategies(m);
+  renderCharts(m);
+}
+
+function renderHero(m) {
+  const statusHTML = m.status==='live'
+    ? `<span style="color:var(--red);font-weight:700">🔴 EN VIVO ${m.minute}</span>`
+    : m.status==='upcoming'
+    ? `<span style="color:var(--accent3)">⏰ ${m.minute}</span>`
+    : `<span style="color:var(--text2)">✅ Finalizado</span>`;
+  document.getElementById('matchHero').innerHTML = `
+    <div class="hero-league">${m.league}</div>
+    <div class="hero-teams">
+      <div class="hero-team">
+        <div class="hero-team-logo">${m.homeEmoji}</div>
+        <div class="hero-team-name">${m.home}</div>
+        <div class="hero-team-record">${m.homeRecord}</div>
+      </div>
+      <div class="hero-score-box">
+        <div class="hero-score">${m.score}</div>
+        <div class="hero-time">${statusHTML}</div>
+        <div class="hero-status">
+          <span style="color:var(--text2);font-size:12px">Cuotas:</span>
+          <strong style="color:var(--accent2)">${m.odds.home}</strong>
+          ${m.odds.draw ? ` / <strong style="color:var(--text2)">${m.odds.draw}</strong>` : ''}
+          / <strong style="color:var(--accent2)">${m.odds.away}</strong>
+        </div>
+      </div>
+      <div class="hero-team">
+        <div class="hero-team-logo">${m.awayEmoji}</div>
+        <div class="hero-team-name">${m.away}</div>
+        <div class="hero-team-record">${m.awayRecord}</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderProbabilities(m) {
+  const p = m.probs;
+  const rows = m.odds.draw ? [
+    { title:'Victoria Local', homeP:p.home, drawP:p.draw, awayP:p.away, homeLabel:m.home, awayLabel:m.away },
+    { title:'1ª Parte – Local Gana', homeP:Math.round(p.home*0.85), drawP:Math.round(p.draw*1.4), awayP:Math.round(p.away*0.75), homeLabel:m.home, awayLabel:m.away },
+    { title:'Ambos Anotan', homeP:62, drawP:null, awayP:38, homeLabel:'Sí', awayLabel:'No' },
+    { title:'Más de 2.5 Goles', homeP:55, drawP:null, awayP:45, homeLabel:'Sí', awayLabel:'No' },
+  ] : [
+    { title:'Victoria', homeP:p.home, drawP:0, awayP:p.away, homeLabel:m.home, awayLabel:m.away },
+    { title:'Favorito cubre spread', homeP:60, drawP:null, awayP:40, homeLabel:'Sí', awayLabel:'No' },
+    { title:'Over total (línea)', homeP:55, drawP:null, awayP:45, homeLabel:'Over', awayLabel:'Under' },
+  ];
+
+  document.getElementById('probSection').innerHTML = rows.map(r => `
+    <div class="prob-row">
+      <div class="prob-header">
+        <span class="prob-title">${r.title}</span>
+        <div class="prob-values">
+          <span class="prob-val home">${r.homeLabel} ${r.homeP}%</span>
+          ${r.drawP ? `<span class="prob-val draw">Empate ${r.drawP}%</span>` : ''}
+          <span class="prob-val away">${r.awayLabel} ${r.awayP}%</span>
+        </div>
+      </div>
+      <div class="prob-bar-track">
+        <div class="prob-bar-home" style="width:${r.homeP}%"></div>
+        ${r.drawP ? `<div class="prob-bar-draw" style="width:${r.drawP}%"></div>` : ''}
+        <div class="prob-bar-away" style="width:${r.awayP}%"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderStats(m) {
+  document.getElementById('statFilter').innerHTML = '';
+  const grid = document.getElementById('statsGrid');
+  grid.innerHTML = m.stats.map(s => {
+    const total = s.home + s.away || 1;
+    const hp = Math.round(s.home / total * 100);
+    const ap = Math.round(s.away / total * 100);
+    return `
+      <div class="stat-home">${s.home}</div>
+      <div class="stat-label">${s.label}</div>
+      <div class="stat-away">${s.away}</div>
+      <div class="stat-bar-row">
+        <div class="stat-bar-h" style="width:${hp}%"></div>
+        <div style="flex:1"></div>
+        <div class="stat-bar-a" style="width:${ap}%"></div>
+      </div>
+    `;
+  }).join('');
+
+  const formSection = document.getElementById('formSection');
+  const formMap = {W:'W',D:'D',L:'L'};
+  const classMap = {W:'form-w',D:'form-d',L:'form-l'};
+  formSection.innerHTML = `
+    <div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:8px">${m.home}</div>
+      <div class="form-dots">${m.form.home.map(r=>`<div class="form-dot ${classMap[r]}">${formMap[r]}</div>`).join('')}</div>
+    </div>
+    <div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:8px">${m.away}</div>
+      <div class="form-dots">${m.form.away.map(r=>`<div class="form-dot ${classMap[r]}">${formMap[r]}</div>`).join('')}</div>
+    </div>
+  `;
+}
+
+function renderPredictions(m) {
+  document.getElementById('predGrid').innerHTML = m.preds.map(p => {
+    const confClass = p.conf >= 65 ? 'conf-high' : p.conf >= 45 ? 'conf-med' : 'conf-low';
+    const confLabel = p.conf >= 65 ? 'Alta confianza' : p.conf >= 45 ? 'Confianza media' : 'Baja confianza';
+    const extraClass = p.hot ? 'hot' : p.value ? 'value' : '';
+    return `
+      <div class="pred-card ${extraClass}">
+        <div class="pred-label">${p.label}</div>
+        <div class="pred-val">${p.val}</div>
+        <div class="pred-sub">Probabilidad</div>
+        <div class="pred-conf">
+          <div class="conf-bar"><div class="conf-fill ${confClass}" style="width:${p.conf}%"></div></div>
+          <div class="conf-label">${confLabel}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderAnalysts(m) {
+  document.getElementById('analystSection').innerHTML = `
+    <p class="section-title">Análisis de Expertos</p>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      ${m.analysts.map(a => `
+        <div class="analyst-card">
+          <div class="analyst-avatar">${a.avatar}</div>
+          <div>
+            <div class="analyst-name">${a.name}</div>
+            <div class="analyst-role">${a.role}</div>
+            <div class="analyst-pick">${a.pick}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <br/>
+    <p class="section-title">Datos de Contexto</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">
+      <div style="background:var(--surface2);border-radius:8px;padding:12px;border:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:4px">FUENTE DE DATOS</div>
+        <div style="font-size:13px;font-weight:600">📡 API + Google Sports</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:12px;border:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:4px">MUESTRA HISTÓRICA</div>
+        <div style="font-size:13px;font-weight:600">📊 Últimas 5 temporadas</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:12px;border:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:4px">MODELO</div>
+        <div style="font-size:13px;font-weight:600">🧠 Regresión + xG/xPoints</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:12px;border:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:4px">ACTUALIZACIÓN</div>
+        <div style="font-size:13px;font-weight:600">🔄 Cada 5 minutos</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderStrategies(m) {
+  const badgeClass = { alta:'badge-high', media:'badge-med', baja:'badge-low' };
+  const badgeLabel = { alta:'Alta confianza', media:'Confianza media', baja:'Baja confianza' };
+  document.getElementById('strategySection').innerHTML = `
+    <p class="section-title">♟️ Estrategias Recomendadas</p>
+    <div class="strategy-list">
+      ${m.strategies.map(s => `
+        <div class="strategy-item">
+          <div class="strategy-icon">${s.icon}</div>
+          <div class="strategy-content">
+            <div class="strategy-title">${s.title}</div>
+            <div class="strategy-desc">${s.desc}</div>
+            <span class="strategy-badge ${badgeClass[s.badge]}">${badgeLabel[s.badge]}</span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <br/>
+    <p class="section-title">⚠️ Aviso Legal</p>
+    <div style="background:rgba(210,153,34,.08);border:1px solid rgba(210,153,34,.3);border-radius:8px;padding:14px;font-size:12px;color:var(--text2);line-height:1.6">
+      Esta plataforma proporciona estadísticas y análisis con fines informativos y educativos. Las probabilidades son estimaciones basadas en datos históricos y modelos matemáticos. 
+      <strong style="color:var(--yellow)">Las apuestas deportivas conllevan riesgo económico. Apuesta responsablemente.</strong> 
+      Los resultados pasados no garantizan resultados futuros.
+    </div>
+  `;
+}
+
+// ══════════════════════════════
+//  CHARTS
+// ══════════════════════════════
+function renderCharts(m) {
+  // Probability donut/bar chart
+  if(probChartInstance) probChartInstance.destroy();
+  const probCtx = document.getElementById('probChart').getContext('2d');
+  const labels = m.odds.draw
+    ? [m.home, 'Empate', m.away]
+    : [m.home, m.away];
+  const dataVals = m.odds.draw
+    ? [m.probs.home, m.probs.draw, m.probs.away]
+    : [m.probs.home, m.probs.away];
+  const colors = m.odds.draw
+    ? ['#58a6ff','#8b949e','#f0883e']
+    : ['#58a6ff','#f0883e'];
+
+  probChartInstance = new Chart(probCtx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Probabilidad %',
+        data: dataVals,
+        backgroundColor: colors,
+        borderRadius: 8,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.raw}%` } }
+      },
+      scales: {
+        x: { grid: { color:'#30363d' }, ticks: { color:'#8b949e' } },
+        y: { grid: { color:'#30363d' }, ticks: { color:'#8b949e', callback: v => v+'%' }, max: 100 }
+      }
+    }
+  });
+
+  // Goals/scores distribution
+  if(goalsChartInstance) goalsChartInstance.destroy();
+  const goalsCtx = document.getElementById('goalsChart').getContext('2d');
+  const goalsLabels = m.goalsHist.map((_,i) => i===0 ? '0' : i===m.goalsHist.length-1 ? `${i}+` : String(i));
+  goalsChartInstance = new Chart(goalsCtx, {
+    type: 'line',
+    data: {
+      labels: goalsLabels,
+      datasets: [{
+        label: 'Frecuencia histórica %',
+        data: m.goalsHist,
+        borderColor: '#00d4aa',
+        backgroundColor: 'rgba(0,212,170,0.1)',
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: '#00d4aa',
+        pointRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color:'#8b949e' } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.raw}% de partidos` } }
+      },
+      scales: {
+        x: { grid: { color:'#30363d' }, ticks: { color:'#8b949e' }, title: { display:true, text:'Nº de Goles/Puntos', color:'#8b949e' } },
+        y: { grid: { color:'#30363d' }, ticks: { color:'#8b949e', callback: v => v+'%' } }
+      }
+    }
+  });
+}
+
+// ══════════════════════════════
+//  TABS
+// ══════════════════════════════
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+  if(tab === 'probabilidades') {
+    const m = getMatch(currentMatchId);
+    if(m) renderCharts(m);
+  }
+}
+</script>
+</body>
+</html>
