@@ -625,7 +625,7 @@ const SPORTS_DATA = {
         ],
         strategies:[
           { icon:'🥊', title:'Jones por Decisión', desc:'Jones demuestra control total en el wrestling y el clínch. Con Stipe grande y difícil de nocaut, Jones buscará decisión unánime. Precio 2.50 vs probabilidad implícita de 40% = +EV positivo.', badge:'alta' },
-          { icon:'📊', title:'Round Betting', desc:'Jones es peligroso en R1 con su ofensiva early. Stipe sobrevive y presiona en R3+. Round 3+ Jones @ 3.20 tiene valor si creces que va largo.', badge:'media' },
+          { icon:'📊', title:'Round Betting', desc:'Jones es peligroso en R1 con su ofensiva early. Stipe sobrevive y presiona en R3+. Round 3+ Jones @ 3.20 tiene valor si crees que va largo.', badge:'media' },
         ],
         goalsHist:[15,20,18,15,10,8,6,4,2,1],
       },
@@ -793,11 +793,19 @@ function renderHero(m) {
   `;
 }
 
+function normProbs(h, d, a) {
+  const total = (h||0) + (d||0) + (a||0) || 100;
+  const homeP = Math.round(h / total * 100);
+  const drawP = d != null ? Math.round(d / total * 100) : null;
+  const awayP = 100 - homeP - (drawP || 0);
+  return { homeP, drawP, awayP };
+}
+
 function renderProbabilities(m) {
   const p = m.probs;
   const rows = m.odds.draw ? [
     { title:'Victoria Local', homeP:p.home, drawP:p.draw, awayP:p.away, homeLabel:m.home, awayLabel:m.away },
-    { title:'1ª Parte – Local Gana', homeP:Math.round(p.home*0.85), drawP:Math.round(p.draw*1.4), awayP:Math.round(p.away*0.75), homeLabel:m.home, awayLabel:m.away },
+    { title:'1ª Parte – Local Gana', ...normProbs(Math.round(p.home*0.85), Math.round(p.draw*1.4), Math.round(p.away*0.75)), homeLabel:m.home, awayLabel:m.away },
     { title:'Ambos Anotan', homeP:62, drawP:null, awayP:38, homeLabel:'Sí', awayLabel:'No' },
     { title:'Más de 2.5 Goles', homeP:55, drawP:null, awayP:45, homeLabel:'Sí', awayLabel:'No' },
   ] : [
@@ -829,9 +837,9 @@ function renderStats(m) {
   document.getElementById('statFilter').innerHTML = '';
   const grid = document.getElementById('statsGrid');
   grid.innerHTML = m.stats.map(s => {
-    const total = s.home + s.away || 1;
+    const total = (s.home + s.away) === 0 ? 1 : (s.home + s.away);
     const hp = Math.round(s.home / total * 100);
-    const ap = Math.round(s.away / total * 100);
+    const ap = 100 - hp;
     return `
       <div class="stat-home">${s.home}</div>
       <div class="stat-label">${s.label}</div>
